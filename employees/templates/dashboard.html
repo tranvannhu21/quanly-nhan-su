@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Bảng điều khiển</h2>
+
+<div class="row">
+
+<div class="col-md-4">
+
+<div class="card text-white bg-primary mb-3">
+<div class="card-body">
+
+<h5 class="card-title">Tổng nhân viên</h5>
+<h2>{{ total_employee }}</h2>
+
+</div>
+</div>
+
+</div>
+
+
+<div class="col-md-4">
+
+<div class="card text-white bg-success mb-3">
+<div class="card-body">
+
+<h5 class="card-title">Tổng phòng ban</h5>
+<h2>{{ total_department }}</h2>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<h4>Biểu đồ cột</h4>
+<canvas id="barChart"></canvas>
+
+</div>
+
+<div class="col-md-6">
+
+<h4>Biểu đồ tròn</h4>
+<canvas id="pieChart"></canvas>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const employees = "{{ total_employee }}";
+const departments = "{{ total_department }}";
+
+
+const barCtx = document.getElementById('barChart');
+
+new Chart(barCtx, {
+
+type: 'bar',
+
+data: {
+
+labels: ['Nhân viên','Phòng ban'],
+
+datasets: [{
+
+label: 'Thống kê',
+
+data: [employees, departments],
+
+backgroundColor: [
+
+'rgba(54, 162, 235, 0.7)',
+
+'rgba(75, 192, 192, 0.7)'
+
+]
+
+}]
+
+}
+
+});
+
+
+const pieCtx = document.getElementById('pieChart');
+
+new Chart(pieCtx, {
+
+type: 'pie',
+
+data: {
+
+labels: ['Nhân viên','Phòng ban'],
+
+datasets: [{
+
+data: [employees, departments],
+
+backgroundColor: [
+
+'rgba(54, 162, 235, 0.7)',
+
+'rgba(75, 192, 192, 0.7)'
+
+]
+
+}]
+
+}
+
+});
+
+</script>
+
+{% endblock %}

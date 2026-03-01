@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Đăng nhập</h2>
+
+<form method="post">
+
+{% csrf_token %}
+
+<label>Tên đăng nhập</label>
+
+<input type="text" name="username" class="form-control">
+
+<br>
+
+<label>Mật khẩu</label>
+
+<input type="password" name="password" class="form-control">
+
+<br>
+
+<button class="btn btn-success">
+Đăng nhập
+</button>
+
+</form>
+
+{% endblock %}
