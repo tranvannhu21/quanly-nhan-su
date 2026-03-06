@@ -7,30 +7,22 @@
 <div class="row">
 
 <div class="col-md-4">
-
 <div class="card text-white bg-primary mb-3">
 <div class="card-body">
-
 <h5 class="card-title">Tổng nhân viên</h5>
 <h2>{{ total_employee }}</h2>
-
 </div>
 </div>
-
 </div>
 
 
 <div class="col-md-4">
-
 <div class="card text-white bg-success mb-3">
 <div class="card-body">
-
 <h5 class="card-title">Tổng phòng ban</h5>
 <h2>{{ total_department }}</h2>
-
 </div>
 </div>
-
 </div>
 
 </div>
@@ -40,28 +32,35 @@
 <div class="row">
 
 <div class="col-md-6">
-
 <h4>Biểu đồ cột</h4>
 <canvas id="barChart"></canvas>
-
 </div>
 
 <div class="col-md-6">
-
-<h4>Biểu đồ tròn</h4>
+<h4>Nhân viên theo phòng ban</h4>
 <canvas id="pieChart"></canvas>
-
 </div>
 
 </div>
+
+
+<!-- Chuyển dữ liệu Django sang JSON -->
+{{ labels|json_script:"labels-data" }}
+{{ data|json_script:"values-data" }}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
-const employees = "{{ total_employee }}";
-const departments = "{{ total_department }}";
+// Lấy dữ liệu từ Django
+const employees = {{ total_employee }};
+const departments = {{ total_department }};
 
+const labels = JSON.parse(document.getElementById('labels-data').textContent);
+const values = JSON.parse(document.getElementById('values-data').textContent);
+
+
+// ===== BIỂU ĐỒ CỘT =====
 
 const barCtx = document.getElementById('barChart');
 
@@ -89,10 +88,16 @@ backgroundColor: [
 
 }]
 
+},
+
+options: {
+responsive: true
 }
 
 });
 
+
+// ===== BIỂU ĐỒ TRÒN =====
 
 const pieCtx = document.getElementById('pieChart');
 
@@ -102,22 +107,29 @@ type: 'pie',
 
 data: {
 
-labels: ['Nhân viên','Phòng ban'],
+labels: labels,
 
 datasets: [{
 
-data: [employees, departments],
+data: values,
 
 backgroundColor: [
 
-'rgba(54, 162, 235, 0.7)',
-
-'rgba(75, 192, 192, 0.7)'
+'#007bff',
+'#28a745',
+'#ffc107',
+'#dc3545',
+'#6f42c1',
+'#17a2b8'
 
 ]
 
 }]
 
+},
+
+options: {
+responsive: true
 }
 
 });

@@ -4,11 +4,54 @@
 
 <h2>Sửa nhân viên</h2>
 
-<form method="post">
-
+<form method="POST" enctype="multipart/form-data">
 {% csrf_token %}
 
-{{form.as_p}}
+<div class="mb-3">
+<label>Tên đăng nhập</label>
+<input type="text" class="form-control" value="{{employee.user.username}}" disabled>
+</div>
+
+<div class="mb-3">
+<label>Phòng ban</label>
+<select name="department" class="form-control">
+{% for d in departments %}
+<option value="{{d.id}}" {% if employee.department.id == d.id %}selected{% endif %}>
+{{d.name}}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="mb-3">
+<label>Chức vụ</label>
+<select name="position" class="form-control">
+{% for p in positions %}
+<option value="{{p.id}}" {% if employee.position.id == p.id %}selected{% endif %}>
+{{p.title}}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="mb-3">
+<label>Số điện thoại</label>
+<input type="text" name="phone" class="form-control" value="{{employee.phone}}">
+</div>
+
+<div class="mb-3">
+<label>Địa chỉ</label>
+<textarea name="address" class="form-control">{{employee.address}}</textarea>
+</div>
+
+<div class="mb-3">
+<label>Ảnh nhân viên</label>
+<input type="file" name="photo" class="form-control">
+
+{% if employee.photo %} <br> <img src="{{employee.photo.url}}" width="100">
+{% endif %}
+
+</div>
 
 <button class="btn btn-primary">
 Cập nhật

@@ -4,9 +4,11 @@
 
 <h2>Danh sách nhân viên</h2>
 
+{% if request.user.is_superuser %}
 <a href="/employees/add" class="btn btn-success">
 Thêm nhân viên
 </a>
+{% endif %}
 
 <br><br>
 
@@ -14,6 +16,7 @@ Thêm nhân viên
 
 <tr>
 
+<th>Ảnh</th>
 <th>Tên</th>
 <th>Phòng ban</th>
 <th>Chức vụ</th>
@@ -25,19 +28,30 @@ Thêm nhân viên
 
 <tr>
 
+<td>
+{% if e.photo %}
+<img src="{{e.photo.url}}" width="50" style="border-radius:50%">
+{% else %}
+<img src="https://via.placeholder.com/50">
+{% endif %}
+</td>
 <td>{{e.user.username}}</td>
 <td>{{e.department}}</td>
 <td>{{e.position}}</td>
 
 <td>
 
+{% if request.user.is_superuser or e.user == request.user %}
 <a href="/employees/edit/{{e.id}}" class="btn btn-warning">
 Sửa
 </a>
+{% endif %}
 
+{% if request.user.is_superuser %}
 <a href="/employees/delete/{{e.id}}" class="btn btn-danger">
 Xóa
 </a>
+{% endif %}
 
 </td>
 

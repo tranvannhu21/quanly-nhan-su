@@ -27,8 +27,24 @@
 </li>
 
 <li class="nav-item mx-2">
+<a class="nav-link text-white" href="/leave">Nghỉ phép</a>
+</li>
+
+<li class="nav-item mx-2">
+<a class="nav-link text-white" href="/checkin">Chấm công</a>
+</li>
+
+<li class="nav-item mx-2">
 <a class="nav-link text-white" href="/dashboard">Dashboard</a>
 </li>
+
+{% if request.user.is_authenticated %}
+
+{% if request.user.employee.photo %}
+<img src="{{request.user.employee.photo.url}}" width="35" style="border-radius:50%; margin-left:10px;">
+{% endif %}
+
+{% endif %}
 
 {% if user.is_authenticated %}
 

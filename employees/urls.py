@@ -17,4 +17,10 @@ path('employees/delete/<int:id>',views.delete_employee),
 
 path('logout/',views.logout_view),
 
+path('leave/',views.leave_request,name='leave'),
+
+path('my-leave/',views.my_leave,name='my_leave'),
+
+path('checkin/',views.checkin,name='checkin'),
+
 ]

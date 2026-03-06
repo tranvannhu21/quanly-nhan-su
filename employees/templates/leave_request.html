@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Tạo đơn nghỉ phép</h2>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="mb-3">
+<label>Ngày bắt đầu</label>
+<input type="date" name="start_date" class="form-control">
+</div>
+
+<div class="mb-3">
+<label>Ngày kết thúc</label>
+<input type="date" name="end_date" class="form-control">
+</div>
+
+<div class="mb-3">
+<label>Lý do</label>
+<textarea name="reason" class="form-control"></textarea>
+</div>
+
+<button class="btn btn-success">Gửi đơn</button>
+
+</form>
+
+{% endblock %}

@@ -47,6 +47,20 @@ class LeaveRequest(models.Model):
 
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
 
+    start_date = models.DateField()
+    end_date = models.DateField()
+
     reason = models.TextField()
 
     status = models.CharField(max_length=20, choices=STATUS, default='pending')
+
+class Attendance(models.Model):
+
+    employee = models.ForeignKey(Employee,on_delete=models.CASCADE)
+
+    date = models.DateField(auto_now_add=True)
+
+    check_in = models.TimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.employee)
