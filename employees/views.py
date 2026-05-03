@@ -209,7 +209,27 @@ def leave_request(request):
     return render(request, 'leave_request.html', {
         'leaves': leaves,
         'employee': employee
+        'is_admin': request.user.is_superuser
     })
+
+@login_required
+def update_leave_status(request, leave_id, status):
+    # Chỉ cho phép tài khoản Admin/Staff thao tác
+    if not request.user.is_superuser:
+        messages.error(request, "Bạn không có quyền thực hiện thao tác này!")
+        return redirect('/leave/')
+
+    try:
+        leave = LeaveRequest.objects.get(id=leave_id)
+        # Cập nhật trạng thái dựa trên tham số truyền vào (approved/rejected)
+        if status in ['approved', 'rejected']:
+            leave.status = status
+            leave.save()
+            messages.success(request, f"Đã cập nhật trạng thái đơn thành: {status}")
+    except LeaveRequest.DoesNotExist:
+        messages.error(request, "Đơn nghỉ phép không tồn tại!")
+
+    return redirect('/leave/')
 
 import openpyxl
 from django.http import HttpResponse
