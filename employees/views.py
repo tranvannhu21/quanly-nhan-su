@@ -231,9 +231,6 @@ def update_leave_status(request, leave_id, status):
 
     return redirect('/leave/')
 
-import openpyxl
-from django.http import HttpResponse
-
 @login_required
 def export_leave(request):
 

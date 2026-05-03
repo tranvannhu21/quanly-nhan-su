@@ -24,6 +24,8 @@ path('leave-list/', views.leave_list_admin, name='leave_list_admin'),
 
 path('my-leave/',views.my_leave,name='my_leave'),
 
+path('leave/update/<int:leave_id>/<str:status>/', views.update_leave_status, name='update_leave_status'),
+
 path('attendance/', views.attendance_view, name='attendance'),
 
 path('attendance-table/', views.attendance_table, name='attendance_table'),
