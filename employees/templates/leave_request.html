@@ -6,7 +6,7 @@
     <h3 class="fw-bold text-dark mb-4">Quản lý Nghỉ phép</h3>
 
     <div class="row">
-        <!-- CỘT TRÁI: FORM TẠO ĐƠN (Chiếm 4/12 cột trên màn hình lớn) -->
+        <!-- CỘT TRÁI: FORM TẠO ĐƠN -->
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm border-0" style="border-radius: 10px;">
                 <div class="card-header bg-white py-3 border-bottom-0">
@@ -39,11 +39,10 @@
             </div>
         </div>
 
-        <!-- CỘT PHẢI: BẢNG LỊCH SỬ (Chiếm 8/12 cột trên màn hình lớn) -->
+        <!-- CỘT PHẢI: BẢNG LỊCH SỬ -->
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
                 
-                <!-- Header của bảng kèm nút Xuất Excel được đặt sang mép phải -->
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <h5 class="m-0 fw-bold text-dark">Lịch sử nghỉ phép</h5>
                     <a href="/export-leave/" class="btn btn-sm btn-light border fw-semibold shadow-sm" style="border-radius: 6px;">
@@ -59,7 +58,10 @@
                                 <th>Ngày bắt đầu</th>
                                 <th>Ngày kết thúc</th>
                                 <th>Lý do</th>
-                                <th class="text-center pe-4">Trạng thái</th>
+                                <th class="text-center">Trạng thái</th>
+                                {% if is_admin %} <!-- Thêm cột cho Admin -->
+                                <th class="text-center pe-4">Thao tác</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody style="font-size: 0.95rem;">
@@ -75,12 +77,11 @@
                                     <span class="badge bg-light text-dark border px-2 py-1">{{ l.end_date|date:"d/m/Y" }}</span>
                                 </td>
                                 
-                                <!-- Cắt bớt text nếu lý do quá dài để tránh vỡ bảng -->
                                 <td class="text-muted text-truncate" style="max-width: 150px;" title="{{ l.reason }}">
                                     {{ l.reason }}
                                 </td>
                                 
-                                <td class="text-center pe-4">
+                                <td class="text-center">
                                     {% if l.status == "pending" %}
                                         <span class="badge bg-warning text-dark shadow-sm px-2 py-1">Chờ duyệt</span>
                                     {% elif l.status == "approved" %}
@@ -89,10 +90,25 @@
                                         <span class="badge bg-danger shadow-sm px-2 py-1">Từ chối</span>
                                     {% endif %}
                                 </td>
+
+                                {% if is_admin %} <!-- Phần xử lý của Admin -->
+                                <td class="text-center pe-4">
+                                    {% if l.status == "pending" %}
+                                        <div class="btn-group">
+                                            <a href="{% url 'update_leave_status' l.id 'approved' %}" 
+                                               class="btn btn-sm btn-outline-success fw-bold" style="font-size: 0.8rem;">Duyệt</a>
+                                            <a href="{% url 'update_leave_status' l.id 'rejected' %}" 
+                                               class="btn btn-sm btn-outline-danger fw-bold" style="font-size: 0.8rem;">Từ chối</a>
+                                        </div>
+                                    {% else %}
+                                        <small class="text-muted">Hoàn thành</small>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
+                                <td colspan="{% if is_admin %}6{% else %}5{% endif %}" class="text-center py-5 text-muted">
                                     <div class="fs-5 mb-2">🏖️</div>
                                     <i>Chưa có đơn nghỉ phép nào.</i>
                                 </td>
