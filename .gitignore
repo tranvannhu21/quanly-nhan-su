@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Dữ liệu media của người dùng (ảnh nhân viên, file đính kèm)
+/media/
+
+# Các file cấu hình riêng của VS Code
+.vscode/

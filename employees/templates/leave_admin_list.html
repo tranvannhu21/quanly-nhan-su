@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h2>Lịch sử nghỉ phép nhân viên</h2>
+
+<table class="table table-bordered">
+
+<thead class="table-light">
+
+<tr>
+<th>Nhân viên</th>
+<th>Ngày bắt đầu</th>
+<th>Ngày kết thúc</th>
+<th>Lý do</th>
+<th>Trạng thái</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for l in leaves %}
+
+<tr>
+
+<td>{{ l.employee.user.username }}</td>
+
+<td>{{ l.start_date|date:"d/m/Y" }}</td>
+
+<td>{{ l.end_date|date:"d/m/Y" }}</td>
+
+<td>{{ l.reason }}</td>
+
+<td>
+
+{% if l.status == "pending" %}
+<span class="badge bg-warning">Chờ duyệt</span>
+
+{% elif l.status == "approved" %}
+<span class="badge bg-success">Đã duyệt</span>
+
+{% else %}
+<span class="badge bg-danger">Từ chối</span>
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="5" class="text-center">Chưa có đơn nghỉ phép</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

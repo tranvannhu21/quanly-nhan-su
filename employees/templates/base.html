@@ -7,6 +7,45 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+<style>
+
+.nav-link{
+color:white !important;
+margin-right:10px;
+}
+
+.nav-link:hover{
+opacity:0.8;
+}
+
+.active-menu{
+border-bottom:3px solid #0d6efd;
+font-weight:bold;
+}
+
+/* ===== Avatar đẹp hơn ===== */
+
+.avatar{
+width:50px;
+height:50px;
+border-radius:50%;
+object-fit:cover;
+}
+
+.avatar-small{
+width:35px;
+height:35px;
+border-radius:50%;
+object-fit:cover;
+}
+
+.avatar:hover{
+transform:scale(1.1);
+transition:0.3s;
+}
+
+</style>
+
 </head>
 
 <body>
@@ -16,37 +55,44 @@
 
 <a class="navbar-brand" href="/">Quản lý nhân sự</a>
 
-<ul class="navbar-nav flex-row">
+<ul class="navbar-nav flex-row align-items-center">
 
 <li class="nav-item mx-2">
-<a class="nav-link text-white" href="/">Trang chủ</a>
+<a class="nav-link {% if request.path == '/' %}active-menu{% endif %}" href="/">
+Trang chủ
+</a>
 </li>
 
 <li class="nav-item mx-2">
-<a class="nav-link text-white" href="/employees">Nhân viên</a>
+<a class="nav-link {% if '/employees' in request.path %}active-menu{% endif %}" href="/employees">
+Nhân viên
+</a>
 </li>
 
 <li class="nav-item mx-2">
-<a class="nav-link text-white" href="/leave">Nghỉ phép</a>
+<a class="nav-link {% if '/leave' in request.path %}active-menu{% endif %}" href="/leave">
+Nghỉ phép
+</a>
 </li>
 
 <li class="nav-item mx-2">
-<a class="nav-link text-white" href="/checkin">Chấm công</a>
+<a class="nav-link {% if '/attendance' in request.path %}active-menu{% endif %}" href="/attendance">
+Chấm công
+</a>
 </li>
 
 <li class="nav-item mx-2">
-<a class="nav-link text-white" href="/dashboard">Dashboard</a>
+<a class="nav-link {% if '/dashboard' in request.path %}active-menu{% endif %}" href="/dashboard">
+Dashboard
+</a>
 </li>
+
 
 {% if request.user.is_authenticated %}
 
 {% if request.user.employee.photo %}
-<img src="{{request.user.employee.photo.url}}" width="35" style="border-radius:50%; margin-left:10px;">
+<img src="{{request.user.employee.photo.url}}" class="avatar-small ms-2">
 {% endif %}
-
-{% endif %}
-
-{% if user.is_authenticated %}
 
 <li class="nav-item mx-2">
 <a class="nav-link text-white" href="/logout/">
@@ -69,13 +115,14 @@
 </div>
 </nav>
 
+
 <div class="container mt-4">
 
 {% block content %}
-
 {% endblock %}
 
 </div>
+
 
 <footer class="text-center mt-5">
 <p>Hệ thống quản lý nhân sự</p>

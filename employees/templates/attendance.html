@@ -1,34 +1,125 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="container-fluid mt-4">
 
-<h2>Chấm công</h2>
+    <h3 class="fw-bold text-dark mb-4">Chấm công</h3>
 
-<form method="POST">
-{% csrf_token %}
-<button class="btn btn-success">Check-in</button>
-</form>
+    <!-- Thông báo (Toasts) giữ nguyên của bạn vì đã rất chuẩn -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 shadow-lg">
+                <div class="d-flex">
+                    <div class="toast-body fw-semibold">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-<hr>
+    <!-- KHU VỰC NÚT BẤM THAO TÁC -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px;">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            
+            <!-- Cụm Check-in / Check-out -->
+            <form method="POST" class="m-0 d-flex gap-3">
+                {% csrf_token %}
+                <button type="submit" name="action" value="checkin" class="btn btn-success px-4 py-2 fw-bold shadow-sm" style="border-radius: 8px;">
+                    Check-in
+                </button>
+                <button type="submit" name="action" value="checkout" class="btn btn-danger px-4 py-2 fw-bold shadow-sm" style="border-radius: 8px;">
+                    Check-out
+                </button>
+            </form>
 
-<h3>Lịch sử chấm công</h3>
+            <!-- Cụm chức năng phụ -->
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'attendance_table' %}" class="btn btn-primary fw-semibold shadow-sm" style="border-radius: 8px;">
+                    Xem bảng chấm công tháng
+                </a>
+                <a href="/export-attendance/" class="btn btn-light border fw-semibold shadow-sm" style="border-radius: 8px;">
+                    Xuất Excel
+                </a>
+            </div>
 
-<table class="table table-bordered">
+        </div>
+    </div>
 
-<tr>
-<th>Ngày</th>
-<th>Giờ vào</th>
-</tr>
+    <!-- BẢNG LỊCH SỬ CHẤM CÔNG -->
+    <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
+        <div class="card-header bg-white py-3 border-bottom-0">
+            <h5 class="m-0 fw-bold text-dark">Lịch sử chấm công</h5>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                    <tr>
+                        <th class="ps-4">Ngày</th>
+                        <th>Giờ vào</th>
+                        <th>Giờ ra</th>
+                        <th>Tổng giờ làm</th>
+                        <th class="text-center pe-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 0.95rem;">
+                    {% for r in records %}
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">{{ r.ngay|date:"d/m/Y" }}</td>
+                        
+                        <!-- Format lại giờ vào/ra cho xịn xò -->
+                        <td>
+                            <span class="badge bg-light text-success border px-2 py-1" style="font-size: 0.9rem;">
+                                {{ r.gio_vao|time:"H:i:s"|default:"--" }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-danger border px-2 py-1" style="font-size: 0.9rem;">
+                                {{ r.gio_ra|time:"H:i:s"|default:"--" }}
+                            </span>
+                        </td>
+                        
+                        <td><span class="fw-bold">{{ r.work_hours }}</span></td>
+                        
+                        <td class="text-center pe-4">
+                            {% if r.gio_ra %}
+                                <span class="badge bg-success shadow-sm px-2 py-1">Đã hoàn thành</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark shadow-sm px-2 py-1">Đang làm việc</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <div class="fs-5 mb-2">⏱️</div>
+                            <i>Chưa có dữ liệu chấm công.</i>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-{% for r in records %}
+</div>
 
-<tr>
-<td>{{r.date}}</td>
-<td>{{r.check_in}}</td>
-</tr>
-
-{% endfor %}
-
-</table>
+<!-- Script xử lý Toasts của bạn -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 3000
+        })
+    })
+    toastList.forEach(toast => toast.show())
+})
+</script>
 
 {% endblock %}

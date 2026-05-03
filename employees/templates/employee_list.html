@@ -1,82 +1,94 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="container-fluid mt-4">
+    
+    <!-- Tiêu đề và nút Thêm nhân viên -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-dark mb-0">Danh sách nhân viên</h3>
+        {% if request.user.is_superuser %}
+        <a href="/employees/add" class="btn btn-success shadow-sm fw-semibold">
+            + Thêm nhân viên
+        </a>
+        {% endif %}
+    </div>
 
-<h2>Danh sách nhân viên</h2>
+    <!-- FORM TÌM KIẾM -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 10px;">
+        <div class="card-body py-3">
+            <form method="get" class="m-0">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-6 col-lg-5">
+                        <input type="text" name="q" class="form-control" placeholder="Tìm theo tên, phòng ban hoặc chức vụ..." value="{{ keyword|default:'' }}">
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary px-4">Tìm kiếm</button>
+                        <a href="/employees" class="btn btn-light border px-4">Làm mới</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
-{% if request.user.is_superuser %}
-<a href="/employees/add" class="btn btn-success">
-Thêm nhân viên
-</a>
-{% endif %}
+    <!-- BẢNG NHÂN VIÊN -->
+    <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                    <tr>
+                        <th class="ps-4">Ảnh</th>
+                        <th>Tên tài khoản</th>
+                        <th>Phòng ban</th>
+                        <th>Chức vụ</th>
+                        <th width="150" class="text-center pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 0.95rem;">
+                    {% for e in employees %}
+                    <tr>
+                        <td class="ps-4">
+                            <!-- Xử lý ép ảnh thành hình tròn chuẩn -->
+                            {% if e.photo %}
+                            <img src="{{e.photo.url}}" alt="avatar" class="rounded-circle border" style="width: 45px; height: 45px; object-fit: cover;">
+                            {% else %}
+                            <img src="https://via.placeholder.com/50" alt="avatar" class="rounded-circle border" style="width: 45px; height: 45px; object-fit: cover;">
+                            {% endif %}
+                        </td>
+                        
+                        <td><span class="fw-bold text-dark">{{e.user.username}}</span></td>
+                        
+                        <td>
+                            <!-- Thêm badge cho phòng ban để có điểm nhấn -->
+                            <span class="badge bg-light text-dark border">{{e.department}}</span>
+                        </td>
+                        
+                        <td>{{e.position}}</td>
+                        
+                        <td class="text-center pe-4">
+                            <!-- Gom cụm nút Sửa/Xóa -->
+                            <div class="btn-group shadow-sm">
+                                {% if request.user.is_superuser or e.user == request.user %}
+                                <a href="/employees/edit/{{e.id}}" class="btn btn-warning btn-sm text-dark fw-semibold">Sửa</a>
+                                {% endif %}
+                                
+                                {% if request.user.is_superuser %}
+                                <a href="/employees/delete/{{e.id}}" class="btn btn-danger btn-sm fw-semibold">Xóa</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <div class="fs-5 mb-2">🔍</div>
+                            <i>Không tìm thấy nhân viên nào phù hợp.</i>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<br><br>
-
-<table class="table table-bordered">
-
-<tr>
-
-<th>Ảnh</th>
-<th>Tên</th>
-<th>Phòng ban</th>
-<th>Chức vụ</th>
-<th>Thao tác</th>
-
-</tr>
-
-{% for e in employees %}
-
-<tr>
-
-<td>
-{% if e.photo %}
-<img src="{{e.photo.url}}" width="50" style="border-radius:50%">
-{% else %}
-<img src="https://via.placeholder.com/50">
-{% endif %}
-</td>
-<td>{{e.user.username}}</td>
-<td>{{e.department}}</td>
-<td>{{e.position}}</td>
-
-<td>
-
-{% if request.user.is_superuser or e.user == request.user %}
-<a href="/employees/edit/{{e.id}}" class="btn btn-warning">
-Sửa
-</a>
-{% endif %}
-
-{% if request.user.is_superuser %}
-<a href="/employees/delete/{{e.id}}" class="btn btn-danger">
-Xóa
-</a>
-{% endif %}
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
+</div>
 {% endblock %}
-
-<form method="get">
-
-<input type="text" name="q" placeholder="Tìm kiếm nhân viên">
-
-<button class="btn btn-primary">
-Tìm
-</button>
-
-</form>
-
-<br>
-
-<td>
-{% if e.photo %}
-<img src="{{e.photo.url}}" width="50">
-{% endif %}
-</td>

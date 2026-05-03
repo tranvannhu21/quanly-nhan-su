@@ -1,39 +1,57 @@
 from .models import Employee, Department, Position
-from django.shortcuts import render,redirect,get_object_or_404
+from django.shortcuts import render, redirect
 from .forms import EmployeeForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import logout
-from .models import Attendance
-from datetime import date
+from .models import Attendance, LeaveRequest
+from datetime import date, datetime
 from django.contrib.auth.models import User
-from .models import LeaveRequest
 from django.db.models import Count
+from django.contrib import messages
+import calendar
+from django.db.models import Q
+import openpyxl
+from django.http import HttpResponse
+from datetime import time
 
 def home(request):
-
     return render(request,'home.html')
-
 
 def employee_list(request):
 
     keyword = request.GET.get('q')
 
-    employees = Employee.objects.all()
+    employees = Employee.objects.select_related(
+        'department','position','user'
+    )
 
     if keyword:
-        employees = employees.filter(user__username__icontains=keyword)
+        employees = employees.filter(
+            Q(user__username__icontains=keyword) |
+            Q(department__name__icontains=keyword) |
+            Q(position__title__icontains=keyword)
+        )
 
     return render(request,'employee_list.html',{
-        'employees':employees
+        'employees': employees,
+        'keyword': keyword
     })
 
+
+from datetime import date, time
 
 @login_required
 def dashboard(request):
 
+    today = date.today()
+
+    # tổng nhân viên
     total_employee = Employee.objects.count()
+
+    # tổng phòng ban
     total_department = Department.objects.count()
+
+    # ====== biểu đồ phòng ban ======
 
     department_data = (
         Employee.objects
@@ -48,12 +66,34 @@ def dashboard(request):
         labels.append(d['department__name'] if d['department__name'] else "Chưa có")
         data.append(d['count'])
 
-    return render(request,'dashboard.html',{
-        'total_employee':total_employee,
-        'total_department':total_department,
-        'labels':labels,
-        'data':data
-    })
+    # ====== thống kê chấm công hôm nay ======
+
+    today_attendance = Attendance.objects.filter(ngay=today)
+
+    present = today_attendance.values('user').distinct().count()
+
+    absent = total_employee - present
+
+    late = Attendance.objects.filter(
+        ngay=today,
+        gio_vao__gt=time(8,0)
+    ).count()
+
+    context = {
+        'total_employee': total_employee,
+        'total_department': total_department,
+        'labels': labels,
+        'data': data,
+
+        # thêm dashboard chấm công
+        'present': present,
+        'absent': absent,
+        'late': late
+    }
+
+    return render(request,'dashboard.html',context)
+
+
 def add_employee(request):
 
     if request.method == 'POST':
@@ -77,19 +117,18 @@ def add_employee(request):
             return redirect('/employees')
 
     else:
-
         form = EmployeeForm()
 
     return render(request,'employee_form.html',{
         'form': form
     })
 
+
 @login_required
 def edit_employee(request,id):
 
     employee = Employee.objects.get(id=id)
 
-    # nếu không phải admin và không phải chính mình
     if not request.user.is_superuser and employee.user != request.user:
         return redirect('/employees')
 
@@ -100,7 +139,6 @@ def edit_employee(request,id):
 
         employee.department_id = request.POST.get('department')
         employee.position_id = request.POST.get('position')
-
         employee.phone = request.POST.get('phone')
         employee.address = request.POST.get('address')
 
@@ -118,10 +156,6 @@ def edit_employee(request,id):
     })
 
 
-
-def is_admin(user):
-    return user.is_superuser
-
 @login_required
 def delete_employee(request,id):
 
@@ -129,7 +163,6 @@ def delete_employee(request,id):
         return redirect('/employees')
 
     employee = Employee.objects.get(id=id)
-
     employee.delete()
 
     return redirect('/employees')
@@ -139,8 +172,11 @@ def logout_view(request):
     logout(request)
     return redirect('/')
 
+
 @login_required
 def leave_request(request):
+
+    employee = Employee.objects.get(user=request.user)
 
     if request.method == "POST":
 
@@ -148,19 +184,62 @@ def leave_request(request):
         end = request.POST.get("end_date")
         reason = request.POST.get("reason")
 
-        employee = Employee.objects.get(user=request.user)
-
         LeaveRequest.objects.create(
             employee=employee,
             start_date=start,
             end_date=end,
             reason=reason,
-            status="Pending"
+            status="pending"
         )
 
-        return redirect('/')
+        return redirect('/leave/')
 
-    return render(request,'leave_request.html')
+    # lấy lịch sử nghỉ phép
+    leaves = LeaveRequest.objects.all().order_by('-start_date')
+
+    return render(request,'leave_request.html',{
+        'leaves': leaves
+    })
+
+import openpyxl
+from django.http import HttpResponse
+
+@login_required
+def export_leave(request):
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Nghi Phep"
+
+    ws.append([
+        "Nhân viên",
+        "Ngày bắt đầu",
+        "Ngày kết thúc",
+        "Lý do",
+        "Trạng thái"
+    ])
+
+    leaves = LeaveRequest.objects.select_related('employee','employee__user')
+
+    for l in leaves:
+
+        ws.append([
+            l.employee.user.username,
+            l.start_date,
+            l.end_date,
+            l.reason,
+            l.status
+        ])
+
+    response = HttpResponse(
+        content_type="application/ms-excel"
+    )
+
+    response["Content-Disposition"] = "attachment; filename=nghi_phep.xlsx"
+
+    wb.save(response)
+
+    return response
 
 @login_required
 def my_leave(request):
@@ -171,25 +250,207 @@ def my_leave(request):
 
     return render(request,'leave_list.html',{'leaves':leaves})
 
+
+# ===============================
+# CHẤM CÔNG
+# ===============================
+
 @login_required
-def checkin(request):
+def attendance_view(request):
 
-    employee = Employee.objects.filter(user=request.user).first()
+    today = date.today()
 
-    if not employee:
-        return redirect('/')
+    records = Attendance.objects.filter(
+        user=request.user
+    ).order_by('-ngay','-gio_vao')
+
+    # ===== TÍNH SỐ GIỜ LÀM =====
+    for r in records:
+
+        if r.gio_vao and r.gio_ra:
+
+            start = datetime.combine(r.ngay, r.gio_vao)
+            end = datetime.combine(r.ngay, r.gio_ra)
+
+            diff = end - start
+
+            hours = diff.total_seconds() / 3600
+
+            r.work_hours = f"{hours:.2f}h"
+
+        else:
+            r.work_hours = "--"
 
     if request.method == 'POST':
 
-        today = date.today()
+        action = request.POST.get('action')
 
-        already = Attendance.objects.filter(employee=employee,date=today).exists()
+        # ===== CHECK IN =====
+        if action == 'checkin':
 
-        if not already:
-            Attendance.objects.create(employee=employee)
+            already_checked = Attendance.objects.filter(
+                user=request.user,
+                ngay=today
+            ).exists()
 
-    records = Attendance.objects.filter(employee=employee).order_by('-date')
+            if already_checked:
+                messages.warning(request,"Bạn đã check-in hôm nay rồi")
+            else:
+                Attendance.objects.create(
+                    user=request.user,
+                    ngay=today,
+                    gio_vao=datetime.now().time()
+                )
+                messages.success(request,"Check-in thành công")
+
+        # ===== CHECK OUT =====
+        elif action == 'checkout':
+
+            record = Attendance.objects.filter(
+                user=request.user,
+                ngay=today,
+                gio_ra__isnull=True
+            ).first()
+
+            if record:
+                record.gio_ra = datetime.now().time()
+                record.save()
+                messages.success(request,"Check-out thành công")
+            else:
+                messages.error(request,"Bạn chưa check-in hôm nay")
+
+        return redirect('attendance')
 
     return render(request,'attendance.html',{
         'records':records
+    })
+
+@login_required
+def attendance_table(request):
+
+    # ===== LẤY THÁNG =====
+    month = request.GET.get('month')
+
+    if not month:
+        month = datetime.now().month
+    else:
+        month = int(month)
+
+    # ===== LẤY NĂM =====
+    year = request.GET.get('year')
+
+    if not year:
+        year = datetime.now().year
+    else:
+        year = int(year)
+
+    # ===== SỐ NGÀY TRONG THÁNG =====
+    days_in_month = calendar.monthrange(year, month)[1]
+
+    employees = Employee.objects.all()
+
+    table = []
+
+    for emp in employees:
+
+        row = {
+            "name": emp.user.username,
+            "days": [],
+            "total": 0
+        }
+
+        for day in range(1, days_in_month + 1):
+
+            try:
+
+                record = Attendance.objects.get(
+                    user=emp.user,
+                    ngay=date(year, month, day)
+                )
+
+                # kiểm tra đi muộn
+                if record.gio_vao and record.gio_vao > time(8,0):
+                    row["days"].append("late")
+                else:
+                    row["days"].append("present")
+
+                row["total"] += 1
+
+            except Attendance.DoesNotExist:
+
+                row["days"].append("absent")
+
+        table.append(row)
+
+    # ===== DANH SÁCH NĂM =====
+    years = range(2023, 2031)
+
+    context = {
+        "table": table,
+        "days": range(1, days_in_month + 1),
+        "month": month,
+        "months": range(1,13),
+        "year": year,
+        "years": years
+    }
+
+    return render(request,"attendance_table.html",context)
+
+@login_required
+def export_attendance(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Cham Cong"
+
+    # Thêm tiêu đề cột
+    ws.append(["Nhân viên", "Ngày", "Giờ vào", "Giờ ra", "Tổng giờ làm"])
+
+    records = Attendance.objects.select_related('user').all()
+
+    for r in records:
+        tong_gio_str = "0.00h"
+        
+        # Kiểm tra xem có đủ dữ liệu giờ vào và giờ ra không
+        if r.gio_vao and r.gio_ra:
+            # Sử dụng datetime.combine thông qua class datetime
+            # Chúng ta dùng một ngày mặc định vì chỉ cần tính độ lệch thời gian
+            dummy_date = date(2000, 1, 1)
+            start_dt = datetime.combine(dummy_date, r.gio_vao)
+            end_dt = datetime.combine(dummy_date, r.gio_ra)
+            
+            # Tính toán hiệu số
+            diff = end_dt - start_dt
+            hours = diff.total_seconds() / 3600
+            
+            if hours > 0:
+                tong_gio_str = f"{hours:.2f}h"
+            else:
+                tong_gio_str = "0.00h"
+
+        ws.append([
+            r.user.username,
+            r.ngay,
+            r.gio_vao,
+            r.gio_ra,
+            tong_gio_str
+        ])
+
+    # Tạo response trả về file Excel
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="cham_cong.xlsx"'
+    wb.save(response)
+
+    return response
+
+
+@login_required
+def leave_list_admin(request):
+
+    leaves = LeaveRequest.objects.select_related('employee','employee__user')\
+        .order_by('-start_date')
+
+    return render(request,'leave_admin_list.html',{
+        'leaves': leaves
     })

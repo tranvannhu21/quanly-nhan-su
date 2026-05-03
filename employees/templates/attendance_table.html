@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h2>Bảng chấm công tháng {{ month }} / {{ year }}</h2>
+
+
+<form method="GET" class="mb-3">
+
+<div class="row">
+
+<div class="col-md-2">
+
+<select name="month" class="form-select">
+
+{% for m in months %}
+<option value="{{ m }}" {% if m == month %}selected{% endif %}>
+{{ m }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-2">
+
+<select name="year" class="form-select">
+
+{% for y in years %}
+<option value="{{ y }}" {% if y == year %}selected{% endif %}>
+{{ y }}
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="col-md-2">
+<button class="btn btn-primary">
+Xem
+</button>
+</div>
+
+</div>
+
+</form>
+
+
+<div style="overflow-x:auto">
+
+<table class="table table-bordered text-center">
+
+<thead class="table-light">
+
+<tr>
+
+<th>Nhân viên</th>
+
+{% for d in days %}
+<th>{{ d }}</th>
+{% endfor %}
+
+<th>Tổng</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for row in table %}
+
+<tr>
+
+<td><b>{{ row.name }}</b></td>
+
+{% for day in row.days %}
+
+<td>
+
+{% if day == "present" %}
+
+<span style="color:green;font-weight:bold">✔</span>
+
+{% elif day == "late" %}
+
+<span style="color:red;font-weight:bold">🔴</span>
+
+{% else %}
+
+<span style="color:#aaa">-</span>
+
+{% endif %}
+
+</td>
+
+{% endfor %}
+
+<td><b>{{ row.total }}</b></td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+<td colspan="{{ days|length|add:2 }}">
+Không có dữ liệu
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

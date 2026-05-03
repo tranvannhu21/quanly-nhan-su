@@ -1,29 +1,71 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Vùng chứa căn giữa form trên màn hình -->
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 75vh;">
+    
+    <!-- Thẻ Card đổ bóng chứa form -->
+    <div class="card shadow-lg" style="width: 100%; max-width: 420px; border-radius: 12px; border: none;">
+        <div class="card-body p-5">
+            
+            <!-- Tiêu đề -->
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-success">Đăng nhập</h3>
+                <p class="text-muted small">Hệ thống quản lý nhân sự</p>
+            </div>
 
-<h2>Đăng nhập</h2>
+            <!-- Báo lỗi nếu nhập sai -->
+            {% if form.errors %}
+                <div class="alert alert-danger py-2" role="alert" style="font-size: 0.9rem;">
+                    Tên đăng nhập hoặc mật khẩu không chính xác!
+                </div>
+            {% endif %}
 
-<form method="post">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Ô nhập tài khoản -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.95rem;">Tên đăng nhập</label>
+                    <input type="text" name="username" class="form-control" placeholder="Nhập tài khoản của bạn" required>
+                </div>
 
-{% csrf_token %}
+                <!-- Ô nhập mật khẩu -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.95rem;">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" id="id_password" placeholder="Nhập mật khẩu" required>
+                </div>
 
-<label>Tên đăng nhập</label>
+                <!-- Tính năng xem mật khẩu và Quên mật khẩu nằm cùng 1 hàng -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="showPassword" onclick="togglePassword()">
+                        <label class="form-check-label text-muted" for="showPassword" style="cursor: pointer; font-size: 0.85rem;">
+                            Hiển thị mật khẩu
+                        </label>
+                    </div>
+                    <a href="{% url 'password_reset' %}" style="text-decoration: none; font-size: 0.85rem;" class="text-success">Quên mật khẩu?</a>
+                </div>
 
-<input type="text" name="username" class="form-control">
+                <!-- Nút đăng nhập trải dài -->
+                <button type="submit" class="btn btn-success w-100 fw-bold py-2">
+                    Đăng nhập ngay
+                </button>
+            </form>
+            
+        </div>
+    </div>
+</div>
 
-<br>
-
-<label>Mật khẩu</label>
-
-<input type="password" name="password" class="form-control">
-
-<br>
-
-<button class="btn btn-success">
-Đăng nhập
-</button>
-
-</form>
-
+<!-- Script xử lý ẩn/hiện mật khẩu -->
+<script>
+function togglePassword() {
+    var pwInput = document.getElementById("id_password");
+    if (pwInput.type === "password") {
+        pwInput.type = "text";
+    } else {
+        pwInput.type = "password";
+    }
+}
+</script>
 {% endblock %}

@@ -1,29 +1,111 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="container-fluid mt-4">
 
-<h2>Tạo đơn nghỉ phép</h2>
+    <h3 class="fw-bold text-dark mb-4">Quản lý Nghỉ phép</h3>
 
-<form method="post">
-{% csrf_token %}
+    <div class="row">
+        <!-- CỘT TRÁI: FORM TẠO ĐƠN (Chiếm 4/12 cột trên màn hình lớn) -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0" style="border-radius: 10px;">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="m-0 fw-bold text-dark">Tạo đơn nghỉ phép</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <form method="post">
+                        {% csrf_token %}
 
-<div class="mb-3">
-<label>Ngày bắt đầu</label>
-<input type="date" name="start_date" class="form-control">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Ngày bắt đầu</label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Ngày kết thúc</label>
+                            <input type="date" name="end_date" class="form-control" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted small">Lý do nghỉ</label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Nhập lý do chi tiết..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm py-2" style="border-radius: 8px;">
+                            Gửi đơn nghỉ phép
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: BẢNG LỊCH SỬ (Chiếm 8/12 cột trên màn hình lớn) -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
+                
+                <!-- Header của bảng kèm nút Xuất Excel được đặt sang mép phải -->
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 fw-bold text-dark">Lịch sử nghỉ phép</h5>
+                    <a href="/export-leave/" class="btn btn-sm btn-light border fw-semibold shadow-sm" style="border-radius: 6px;">
+                        Xuất Excel
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                            <tr>
+                                <th class="ps-4">Nhân viên</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Lý do</th>
+                                <th class="text-center pe-4">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 0.95rem;">
+                            {% for l in leaves %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-dark">{{ l.employee.user.username }}</td>
+                                
+                                <td>
+                                    <span class="badge bg-light text-dark border px-2 py-1">{{ l.start_date|date:"d/m/Y" }}</span>
+                                </td>
+                                
+                                <td>
+                                    <span class="badge bg-light text-dark border px-2 py-1">{{ l.end_date|date:"d/m/Y" }}</span>
+                                </td>
+                                
+                                <!-- Cắt bớt text nếu lý do quá dài để tránh vỡ bảng -->
+                                <td class="text-muted text-truncate" style="max-width: 150px;" title="{{ l.reason }}">
+                                    {{ l.reason }}
+                                </td>
+                                
+                                <td class="text-center pe-4">
+                                    {% if l.status == "pending" %}
+                                        <span class="badge bg-warning text-dark shadow-sm px-2 py-1">Chờ duyệt</span>
+                                    {% elif l.status == "approved" %}
+                                        <span class="badge bg-success shadow-sm px-2 py-1">Đã duyệt</span>
+                                    {% else %}
+                                        <span class="badge bg-danger shadow-sm px-2 py-1">Từ chối</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <div class="fs-5 mb-2">🏖️</div>
+                                    <i>Chưa có đơn nghỉ phép nào.</i>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
 </div>
-
-<div class="mb-3">
-<label>Ngày kết thúc</label>
-<input type="date" name="end_date" class="form-control">
-</div>
-
-<div class="mb-3">
-<label>Lý do</label>
-<textarea name="reason" class="form-control"></textarea>
-</div>
-
-<button class="btn btn-success">Gửi đơn</button>
-
-</form>
-
 {% endblock %}
