@@ -175,39 +175,36 @@ def logout_view(request):
 
 @login_required
 def leave_request(request):
-    # 1. KIỂM TRA QUYỀN: Nếu là Admin/Staff thì chuyển sang trang quản lý đơn
-    if request.user.is_staff or request.user.is_superuser:
-        # 'leave_list_admin' là tên name trong urls.py của trang duyệt đơn
-        return redirect('leave_list_admin') 
-
-    # 2. XỬ LÝ NHÂN VIÊN: Bắt lỗi nếu User chưa được tạo hồ sơ Employee
+    # 1. Thử tìm hồ sơ nhân viên
     try:
         employee = Employee.objects.get(user=request.user)
     except Employee.DoesNotExist:
-        # Thông báo lỗi cho người dùng và quay về trang chủ
-        messages.error(request, "Tài khoản của bạn chưa có hồ sơ nhân viên. Vui lòng liên hệ Quyền (HR)!")
-        return redirect('/')
+        # Thay vì redirect, ta báo lỗi trực tiếp trên trang để biết đường mà sửa
+        messages.error(request, f"Lỗi: Tài khoản {request.user.username} chưa có hồ sơ trong bảng Employee!")
+        # Nếu không có hồ sơ thì không cho làm gì tiếp, hiện trang trắng kèm lỗi
+        return render(request, 'leave_request.html', {'error_critical': True})
 
-    # 3. XỬ LÝ GỬI ĐƠN (POST)
+    # 2. Xử lý POST (Gửi đơn)
     if request.method == "POST":
         start = request.POST.get("start_date")
         end = request.POST.get("end_date")
         reason = request.POST.get("reason")
 
-        # Tạo đơn mới gắn với employee đã tìm thấy
         LeaveRequest.objects.create(
             employee=employee,
             start_date=start,
             end_date=end,
             reason=reason,
-            status="pending" # Trạng thái mặc định là chờ duyệt
+            status="pending"
         )
-        messages.success(request, "Gửi đơn nghỉ phép thành công, vui lòng chờ duyệt!")
+        messages.success(request, "Gửi đơn thành công!")
         return redirect('/leave/')
 
-    # 4. LẤY LỊCH SỬ NGHỈ PHÉP
-    # Lưu ý: Chỉ nên lấy đơn của CHÍNH nhân viên này (dùng filter thay vì all)
-    leaves = LeaveRequest.objects.filter(employee=employee).order_by('-start_date')
+    # 3. Lấy lịch sử (Chỉ lấy của mình hoặc lấy tất cả nếu là Admin)
+    if request.user.is_superuser:
+        leaves = LeaveRequest.objects.all().order_by('-start_date')
+    else:
+        leaves = LeaveRequest.objects.filter(employee=employee).order_by('-start_date')
 
     return render(request, 'leave_request.html', {
         'leaves': leaves,
