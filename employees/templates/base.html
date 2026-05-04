@@ -128,5 +128,170 @@ Dashboard
 <p>Hệ thống quản lý nhân sự</p>
 </footer>
 
+<!-- BẮT ĐẦU KHUNG CHATBOT AI -->
+<div id="ai-chat-widget">
+    <div id="chat-header" onclick="toggleChat()">
+        <span>🤖 HR AI Assistant</span>
+        <span id="chat-toggle-icon">▲</span>
+    </div>
+    <div id="chat-body" style="display: none;">
+        <div id="chat-messages">
+            <div class="message bot-message">Xin chào! Tôi là trợ lý AI của Phòng Nhân sự. Tôi có thể giúp gì cho bạn?</div>
+        </div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Nhập câu hỏi..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">Gửi</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Làm đẹp cho con Chatbot nằm ở góc phải màn hình */
+    #ai-chat-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 320px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        font-family: Arial, sans-serif;
+        z-index: 9999; /* Đảm bảo luôn nằm trên cùng */
+        overflow: hidden;
+    }
+    #chat-header {
+        background-color: #007bff;
+        color: white;
+        padding: 12px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+    }
+    #chat-messages {
+        height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .message {
+        max-width: 80%;
+        padding: 8px 12px;
+        border-radius: 15px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    .bot-message {
+        background-color: #e9ecef;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+    #chat-input-area {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+    }
+    #chat-input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+    }
+    #chat-input-area button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        margin-left: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+<!-- KẾT THÚC KHUNG HTML/CSS -->
+
+<script>
+    // Ẩn/hiện khung chat
+    function toggleChat() {
+        const body = document.getElementById('chat-body');
+        const icon = document.getElementById('chat-toggle-icon');
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            icon.innerText = '▼';
+        } else {
+            body.style.display = 'none';
+            icon.innerText = '▲';
+        }
+    }
+
+    // Bấm Enter để gửi
+    function handleEnter(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    // Hàm gửi tin nhắn
+    function sendMessage() {
+        const inputField = document.getElementById('chat-input');
+        const messageText = inputField.value.trim();
+        
+        if (messageText === '') return;
+
+        // In tin nhắn của người dùng ra màn hình
+        appendMessage('user-message', messageText);
+        inputField.value = ''; // Xóa trắng ô nhập
+        
+        // Hiện trạng thái "AI đang gõ..."
+        const loadingId = appendMessage('bot-message', 'Đang suy nghĩ...');
+
+        // Gửi dữ liệu về backend Django bằng AJAX (Fetch)
+        fetch('/api/chatbot/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: messageText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Thay dòng "Đang suy nghĩ..." bằng câu trả lời thật của AI
+            document.getElementById(loadingId).innerText = data.reply;
+            scrollToBottom();
+        })
+        .catch(error => {
+            document.getElementById(loadingId).innerText = 'Lỗi kết nối. Vui lòng thử lại!';
+        });
+    }
+
+    // Hàm in tin nhắn ra khung chat
+    function appendMessage(className, text) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${className}`;
+        messageDiv.innerText = text;
+        // Tạo ID ngẫu nhiên để dễ dàng sửa lại khi AI trả lời xong
+        const uniqueId = 'msg-' + Math.random().toString(36).substr(2, 9);
+        messageDiv.id = uniqueId;
+        
+        document.getElementById('chat-messages').appendChild(messageDiv);
+        scrollToBottom();
+        return uniqueId;
+    }
+
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+
 </body>
 </html>

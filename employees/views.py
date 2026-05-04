@@ -284,3 +284,29 @@ def export_attendance(request):
     response['Content-Disposition'] = 'attachment; filename="cham_cong.xlsx"'
     wb.save(response)
     return response
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import google.generativeai as genai
+import os
+import json
+
+# Lấy API Key từ file .env (Bảo mật)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel(
+    model_name='gemini-1.5-flash',
+    system_instruction="Bạn là trợ lý Nhân sự (HR) của công ty. Hãy trả lời ngắn gọn về quy định công ty."
+)
+
+@csrf_exempt # Tạm thời bỏ qua CSRF để test dễ hơn
+def chatbot_api(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_message = data.get("message", "")
+        
+        try:
+            response = model.generate_content(user_message)
+            return JsonResponse({"reply": response.text})
+        except Exception as e:
+            return JsonResponse({"reply": "Xin lỗi, hệ thống AI đang bận!"}, status=500)

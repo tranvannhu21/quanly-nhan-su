@@ -211,3 +211,4 @@ __marimo__/
 
 # Các file cấu hình riêng của VS Code
 .vscode/
+.env
