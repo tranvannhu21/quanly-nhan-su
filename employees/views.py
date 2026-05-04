@@ -299,14 +299,44 @@ model = genai.GenerativeModel(
     system_instruction="Bạn là trợ lý Nhân sự (HR) của công ty. Hãy trả lời ngắn gọn về quy định công ty."
 )
 
-@csrf_exempt # Tạm thời bỏ qua CSRF để test dễ hơn
+import os
+import json
+import requests
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 def chatbot_api(request):
     if request.method == "POST":
         data = json.loads(request.body)
         user_message = data.get("message", "")
         
+        # 1. Lấy API key từ file .env
+        api_key = os.getenv("GEMINI_API_KEY")
+        
+        # 2. Đường dẫn (URL) gọi thẳng đến máy chủ AI của Google
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        # 3. Gói đồ đạc (Câu lệnh + Câu hỏi) để gửi đi
+        payload = {
+            "system_instruction": {
+                "parts": {"text": "Bạn là trợ lý Nhân sự (HR) của công ty. Hãy trả lời ngắn gọn về quy định công ty, nghỉ phép, chấm công."}
+            },
+            "contents": [{
+                "parts": [{"text": user_message}]
+            }]
+        }
+        
+        headers = {'Content-Type': 'application/json'}
+        
         try:
-            response = model.generate_content(user_message)
-            return JsonResponse({"reply": response.text})
+            # 4. Bấm nút "Gửi" bưu kiện đi và chờ Google trả lời
+            response = requests.post(url, json=payload, headers=headers)
+            result = response.json()
+            
+            # 5. Bóc tách câu trả lời từ gói hàng Google gửi về
+            reply_text = result['candidates'][0]['content']['parts'][0]['text']
+            
+            return JsonResponse({"reply": reply_text})
         except Exception as e:
-            return JsonResponse({"reply": "Xin lỗi, hệ thống AI đang bận!"}, status=500)
+            return JsonResponse({"reply": "Xin lỗi, hệ thống AI đang bận! Vui lòng thử lại."}, status=500)
