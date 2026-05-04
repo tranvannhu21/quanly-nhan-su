@@ -43,4 +43,25 @@ Website giúp quản lý thông tin nhân viên, chấm công và nghỉ phép.
 
 </div>
 
+<style>
+    /* Đổi màu nền của toàn bộ trang */
+    body {
+        /* Dải màu gradient từ trắng sang xám nhạt */
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        background-attachment: fixed; /* Giữ nền cố định khi cuộn trang */
+    }
+
+    /* Đổ bóng nhẹ cho 3 cái thẻ (Card) để chúng nổi bật lên dạng 3D */
+    .card {
+        border: none !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        transition: transform 0.3s ease;
+    }
+
+    /* Hiệu ứng khi di chuột vào thẻ */
+    .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
 {% endblock %}
