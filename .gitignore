@@ -212,3 +212,23 @@ __marimo__/
 # Các file cấu hình riêng của VS Code
 .vscode/
 .env
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Django generated files
+staticfiles/
