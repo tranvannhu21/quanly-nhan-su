@@ -43,3 +43,14 @@ Tên đăng nhập: tranvannhu21 (Phòng Nhân Sự)
 Tên đăng nhập: haminhquang (Phòng Marketing)
 
 Mật khẩu chung: 123456
+
+## Deployment
+
+Ứng dụng đã được triển khai trên Render.
+
+## CI/CD
+
+- GitHub Actions kiểm tra Django khi push lên nhánh `main`.
+- Render tự động deploy khi CI thành công.
+- Web server: Gunicorn.
+- Static files: WhiteNoise.
