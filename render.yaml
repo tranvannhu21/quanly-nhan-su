@@ -7,7 +7,7 @@ services:
     branch: main
     buildCommand: bash build.sh
     startCommand: python -m gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass
     healthCheckPath: /
     envVars:
       - key: SECRET_KEY
